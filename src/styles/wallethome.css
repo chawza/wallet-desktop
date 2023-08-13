@@ -1,0 +1,16 @@
+.container {
+    margin: 0;
+}
+
+.record-table {
+    width: 100%;
+}
+
+.record-table th {
+    text-align: left;
+}
+
+.menu {
+    display: flex;
+    flex-direction: row-reverse;
+}
