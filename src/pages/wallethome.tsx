@@ -4,15 +4,28 @@ import "../styles/wallethome.css"
 import { Page } from "../constants";
 import useRecords from "../hooks/transactions";
 import { Records } from "../models/wallet";
+import { dialog, invoke } from "@tauri-apps/api";
 
 function pretty_date(date: Date) {
     const formater = new Intl.DateTimeFormat("en-US")
     return formater.format(date)
 }
 
-function renderRow(record: Records) {
-    return <tr key={record.id}>
-        <td>{record.title}</td>
+type RowParam = {
+    record: Records,
+    handleDelete: (id: number) => void 
+}
+
+function Row(props: RowParam) {
+    const { record, handleDelete } = props
+
+    return <tr className="record-row" key={record.id}>
+        <td>
+            <div>
+            <button className="del" onClick={() => handleDelete(record.id!!)}>del</button>
+            {record.title}
+            </div>
+        </td>
         <td>{pretty_date(record.datetime)}</td>
         <td>{record.amount}</td>
     </tr>
@@ -20,7 +33,25 @@ function renderRow(record: Records) {
 
 export default function WalletHome(props = {}) {
     const { setAppPage } = useContext(WalletContext);
-    const { records } = useRecords();
+    const { records, refresh } = useRecords();
+
+
+    async function handleDelete(id: number) {
+        const record = records.find(value => value.id == id);
+        if (record == undefined) {
+            dialog.message("Invalid record id")
+            return
+        }
+
+        if (await dialog.confirm(`Delete record "${record.title}"`)) {
+            invoke('delete_transaction', {id: record.id})
+                .then(async () => {
+                    await dialog.message("Record Deleted!")
+                    refresh()
+                })
+                .catch(async (msg) => await dialog.message(msg))
+        }
+    }
 
     return <div className="container">
         <div className="menu">
@@ -37,7 +68,7 @@ export default function WalletHome(props = {}) {
                         </tr>
                     </thead>
                     <tbody>
-                        {records.map(record => renderRow(record))}
+                        {records.map(record => <Row record={record} handleDelete={handleDelete} />)}
                     </tbody>
                 </table>
                 : <>Not Transactions!</>

@@ -16,7 +16,11 @@ export default function useRecords() {
         fetchAllRecords()
     }, [])
 
+    function refresh() {
+        fetchAllRecords()
+    }
+
     function setQuery() {}
 
-    return {records, setQuery}
+    return {records, setQuery, refresh}
 }

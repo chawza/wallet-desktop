@@ -21,10 +21,20 @@ fn get_transaction() -> Vec<Transaction> {
 }
 
 #[tauri::command]
-fn add_transaction(title: &str, datetime: i64, amount: i64) -> Result<Transaction, ()> {
+fn add_transaction(title: &str, datetime: i64, amount: i64) -> Result<Transaction, String> {
     let record = Transaction { id: None, title: title.to_string(), datetime, amount};
     let session = get_connection().unwrap();
-    Ok(session.add_transaction(record).unwrap())
+    match session.add_transaction(record) {
+        Ok(tran) => Ok(tran),
+        Err(err) => Err(err)
+    }
+}
+
+#[tauri::command]
+fn delete_transaction(id: i64) -> Result<(), String>{
+    let session = get_connection().unwrap();
+    session.delete_transaction(id)
+    
 }
 
 fn get_db_path() -> PathBuf {
@@ -40,7 +50,6 @@ fn get_connection() -> Result<Store, ()> {
 
 fn setup_database(session: Store) -> Result<(), ()> {
     session.setup().unwrap();
-    // fill_db(session).unwrap();
     Ok(())
 }
 
@@ -51,7 +60,7 @@ fn main() {
             setup_database(session).unwrap();
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_transaction, add_transaction])
+        .invoke_handler(tauri::generate_handler![get_transaction, add_transaction, delete_transaction])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

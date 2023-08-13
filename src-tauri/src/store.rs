@@ -66,6 +66,12 @@ impl Store {
         }
     }
 
+    pub fn delete_transaction(&self, record_id: i64) -> Result<(), String> {
+        match self.connection.execute(format!("DELETE FROM transactions WHERE rowid={}", record_id)) {
+            Ok(()) => Ok(()),
+            Err(msg) => Err(msg.to_string())
+        }
+    }
 
     pub fn all_transactions(&self) -> Vec<Transaction> {
         let mut transactions: Vec<Transaction> = Vec::new();
