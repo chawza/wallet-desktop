@@ -1,6 +1,6 @@
-import { useContext, useState } from "react"
+import { useContext } from "react"
 import { WalletContext } from "../contexts/wallet"
-import "../styles/wallethome.css"
+import "../styles/HomeStyles.css"
 import { Page } from "../constants";
 import useRecords from "../hooks/transactions";
 import { Records } from "../models/wallet";

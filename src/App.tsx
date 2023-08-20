@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Page } from "./constants";
-import WalletHome from "./pages/wallethome";
+import WalletHome from "./pages/HomePage";
 import { WalletContext } from "./contexts/wallet";
-import AddRecordPage from "./pages/addrecord";
+import AddRecordPage from "./pages/AddRecordPage";
 import AccountPage from "./pages/AccountPage";
 
 import './App.css'
