@@ -7,6 +7,7 @@ mod model;
 use std::path::PathBuf;
 
 use chrono::Utc;
+use model::Account;
 use store::Store;
 
 use tauri::Config;
@@ -53,6 +54,30 @@ fn setup_database(session: Store) -> Result<(), ()> {
     Ok(())
 }
 
+#[tauri::command]
+fn add_account(record: Account) -> Result<(), String> {
+    let session = get_connection().unwrap();
+    match session.add_account(record) {
+        Ok(_) => Ok(()),
+        Err(msg) => Err("Error String".to_string())
+    }
+}
+
+#[tauri::command]
+fn get_all_accounts() -> Result<Vec<Account>, ()> {
+    let session = get_connection().unwrap();
+    Ok(session.all_accounts())
+}
+
+#[tauri::command]
+fn delete_account_by_id(id: i64) -> Result<(), String> {
+    let session = get_connection().unwrap();
+    match session.delete_account_by_id(id) {
+        Ok(_) => Ok(()),
+        Err(_) => Err("Cannot delete account".to_string())
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
@@ -60,7 +85,10 @@ fn main() {
             setup_database(session).unwrap();
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_transaction, add_transaction, delete_transaction])
+        .invoke_handler(tauri::generate_handler![
+            get_transaction, add_transaction, delete_transaction,
+            get_all_accounts, add_account, delete_account_by_id
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -3,8 +3,10 @@ import { Page } from "./constants";
 import WalletHome from "./pages/wallethome";
 import { WalletContext } from "./contexts/wallet";
 import AddRecordPage from "./pages/addrecord";
+import AccountPage from "./pages/AccountPage";
 
 import './App.css'
+import AddAccountPage from "./pages/AddAccountPage";
 
 function App() {
   let [page, setPage] = useState(Page.WALLET_HOME);
@@ -23,14 +25,23 @@ function App() {
     else if (page == Page.ADD_RECORD) {
       return <AddRecordPage />
     }
-    throw Error(`Not Implementm page ${page}`)
+    else if (page == Page.ACCOUNTS_PAGE) {
+      return <AccountPage/>
+    }
+    else if (page == Page.ADD_ACCOUNT) {
+      return <AddAccountPage/>
+    }
+    throw Error(`Not Implemented Page page ${page}`)
   }
 
   return (
     <WalletContext.Provider value={{setAppPage}}>
       <div className="app-container">
         <div className="nav">
-          <h1 onClick={() => setAppPage(Page.WALLET_HOME)}>Wallet</h1>
+          <nav>
+            <h1 onClick={() => setAppPage(Page.WALLET_HOME)}>Wallet</h1>
+            <h1 onClick={() => setAppPage(Page.ACCOUNTS_PAGE)}>Accounts</h1>
+          </nav>
           <h2>User</h2>
         </div>
         {page && render_page()}

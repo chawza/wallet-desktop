@@ -1,9 +1,5 @@
-use chrono::Utc;
-use serde_json::StreamDeserializer;
-use sqlite::{self, State};
-use crate::model::{Label, Transaction, Transfer};
-use core::panic;
-use std::{fs, str::FromStr};
+use sqlite::{self, State, Row, Error};
+use crate::model::{Label, Transaction, Transfer, Account};
 
 pub struct Store {
     connection: sqlite::Connection,
@@ -20,20 +16,71 @@ impl Store {
     pub fn setup(&self) -> Result<(), ()> {
         self.connection.execute(
             "CREATE TABLE IF NOT EXISTS transactions (
-                title TEXT, datetime INTEGER, amount INTEGER
+                title TEXT, datetime INTEGER,
+                amount INTEGER, account_id INTEGER
             );"
         ).unwrap();
+
         self.connection.execute(
-            "CREATE TABLE IF NOT EXISTS labels (
+            "CREATE TABLE IF NOT EXISTS accounts (
                 name TEXT
             );"
         ).unwrap();
+        // self.connection.execute(
+        //     "CREATE TABLE IF NOT EXISTS labels (
+        //         name TEXT
+        //     );"
+        // ).unwrap();
         self.connection.execute(
             "CREATE TABLE IF NOT EXISTS transfers (
-                name TEXT, note TEXT, amount INTEGER
+                name TEXT, note TEXT, amount INTEGER,
+                source_id INTEGER, target_id INTEGER
             );"
         ).unwrap();
         Ok(())
+    }
+
+    pub fn all_accounts(&self) -> Vec<Account> {
+        let mut stmnt = self.connection.prepare("SELECT rowid, name FROM accounts;").unwrap();
+
+        let mut accounts: Vec<Account> = vec!();
+
+        while let State::Row = stmnt.next().unwrap() {
+            accounts.push(Account {
+                id: stmnt.read(0).unwrap(),
+                name: stmnt.read(1).unwrap()
+            })
+        }
+
+        accounts
+        
+    }
+
+    pub fn add_account(&self, name: Account) -> Result<(), ()>{
+        self.connection.execute(
+            format!("INSERT INTO accounts VALUES('{}');", name.name)
+        ).unwrap();
+        Ok(())
+    }
+
+    pub fn delete_account_by_id(&self, id: i64) -> Result<(), ()> {
+        self.connection.execute(format!("DELETE FROM accounts WHERE rowid={}", id)).unwrap();
+        Ok(())
+    }
+    
+    pub fn get_account_by_id(&self, id: i64) -> Result<Account, String> {
+        let get_last_inserted_row_query = format!("SELECT rowid, name FROM accounts WHERE rowid = {}", id);
+        let mut statement = self.connection.prepare(get_last_inserted_row_query).unwrap();
+
+        match statement.next().unwrap() {
+            State::Done => Err("Cannot find lasts row!".to_string()),
+            State::Row => {
+                Ok(Account{
+                    id: statement.read(0).unwrap(),
+                    name: statement.read(1).unwrap()
+                }) 
+            }
+        }
     }
 
     pub fn add_transaction(&self, record: Transaction) -> Result<Transaction, String>{
@@ -47,7 +94,7 @@ impl Store {
                 record.datetime,
                 record.amount
             );
-            let statement = self.connection.execute(insert_query).unwrap();
+            let _ = self.connection.execute(insert_query).unwrap();
             
             let get_last_inserted_row_query = "SELECT rowid, title, datetime, amount FROM transactions ORDER BY rowid DESC LIMIT 1";
             let mut statement = self.connection.prepare(get_last_inserted_row_query).unwrap();

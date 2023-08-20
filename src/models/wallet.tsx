@@ -12,4 +12,9 @@ export type Transfer = {
     datetime : Date,
 }
 
+export type Account = {
+    id: number,
+    name: String
+}
+
 export type Records = Transaction | Transfer

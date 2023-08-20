@@ -9,3 +9,9 @@
   flex-direction: row;
   justify-content: space-between;
 }
+
+.nav nav {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
